@@ -17,19 +17,21 @@ object warmup {
     case Num(value)   => value
   }
   
-  //Make an expression to 
+  //Make an expression to String
   def str(e: Expr):String = e match {
     case Plus(e1,e2)   => s"(+ ${str(e1)} ${str(e2)})"
     case Times(e1, e2) => s"(* ${str(e1)} ${str(e2)})"
     case Num(value)    => value.toString
   }
   
+  //Copy an expression
   def copy(e: Expr):Expr = e match {
     case Plus(e1,e2)   => Plus(copy(e1), copy(e2)) 
     case Times(e1, e2) => Times(copy(e1), copy(e2))
     case Num(value)    => Num(value)
   }
   
+  //Duplicate the multiplication by 2
   def dup(e: Expr):Expr = e match {
     case Plus(e1,e2)   => Plus(dup(e1), dup(e2)) 
     case Times(Num(2), e1) => Plus(dup(e1), dup(e1))
