@@ -9,13 +9,15 @@ object warmup {
   case class Plus(e1: Expr, e2:Expr) extends Expr
   case class Times(e1: Expr, e2: Expr) extends Expr
   case class Num(value: Int) extends Expr
-  
+ 
+  //Evaluate an expression
   def eval(e: Expr):Int = e match {
     case Plus(e1,e2)  => eval(e1) + eval(e2)
     case Times(e1,e2) => eval(e1) * eval(e2)
     case Num(value)   => value
   }
   
+  //Make an expression to 
   def str(e: Expr):String = e match {
     case Plus(e1,e2)   => s"(+ ${str(e1)} ${str(e2)})"
     case Times(e1, e2) => s"(* ${str(e1)} ${str(e2)})"
@@ -30,7 +32,9 @@ object warmup {
   
   def dup(e: Expr):Expr = e match {
     case Plus(e1,e2)   => Plus(dup(e1), dup(e2)) 
-    case Times(e1, e2) => Times(dup(e1), dup(e2))
+    case Times(Num(2), e1) => Plus(dup(e1), dup(e1))
+    case Times(e1,Num(2)) => Plus(dup(e1), dup(e1))
+    case Times(e1, e2) => Times(dup(e1), dup(e2))   
     case Num(value)    => Num(value)
   }
   
