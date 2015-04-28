@@ -14,8 +14,8 @@ case class TypeError(msg: String) extends Exception(msg)
 object CoreCompiler {
 
   def main(args: Array[String]) {
-    var arr = Array("tl-progs/simple2.tl", "tl-progs/simple1.tl", "tl-progs/sqrt.tl", "tl-progs/euclid.tl", "tl-progs/factorize.tl", "tl-progs/fibonacci.tl", "tl-progs/type-error1.tl")
-    //var arr = Array("tl-progs/sqrt.tl")
+    //var arr = Array("tl-progs/simple2.tl", "tl-progs/simple1.tl", "tl-progs/sqrt.tl", "tl-progs/euclid.tl", "tl-progs/factorize.tl", "tl-progs/fibonacci.tl", "tl-progs/type-error1.tl")
+    var arr = Array("tl-progs/sqrt.tl")
     if (args.length == 0) {
       //      Console.err.println("No arguments.")
       //      sys.exit(0)
@@ -50,7 +50,7 @@ object CoreCompiler {
         parser.getParseTree(tokenList)
         parser.buildGraphViz(parseTreeName)
 
-        //var ast: AST_New = new AST_New()
+        /*//var ast: AST_New = new AST_New()
         var ast: LeftAssociativeAST = new LeftAssociativeAST()
         var astRoot: ASTNode = ast.getAbstractSyntextTree(tokenList)
         ast.generateGraphVizOuptutFile(astName)
@@ -71,7 +71,7 @@ object CoreCompiler {
           println(st.nextToken())
         }*/
         var mips= new MIPS
-        mips.generateMIPS(iloc.fullILOCCOdes, mipsAsmName)
+        mips.generateMIPS(iloc.fullILOCCOdes, mipsAsmName)*/
 
       } catch {
         case e: SyntaxError => {
