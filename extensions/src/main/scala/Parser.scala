@@ -132,9 +132,9 @@ class Parser {
           addChildrenAndConsumeToken(parametersNode)
         }
         parametersNode.childrens += typeNT(parametersNode)
-        
+
         if (remaining.head.value.equals(";")) {
-          addChildrenAndConsumeToken(parametersNode)          
+          addChildrenAndConsumeToken(parametersNode)
         }
         parametersNode.childrens += parameters(parametersNode)
       } else parametersNode.childrens += epsilonNode(parametersNode)
@@ -259,6 +259,39 @@ class Parser {
       return statementSeqNode
     }
 
+    def callParams(parent: Node): Node = {
+      nodeNumber += 1
+      var callParamsNode: Node = new Node(parent, "callParams", null, nodeNumber)
+      nodeListInFile += (callParamsNode)
+      if (!remaining.head.value.equals(")")) {
+        if (matchTokenType(Constants.IdentText)) {
+          addChildrenAndConsumeToken(callParamsNode)
+        }
+         if (remaining.head.value.equals(","))  {
+          addChildrenAndConsumeToken(callParamsNode)
+        }
+        callParamsNode.childrens += callParams(callParamsNode)
+      } else callParamsNode.childrens += epsilonNode(callParamsNode)
+      return callParamsNode
+    }
+
+    def procCall(parent: Node): Node = {
+      nodeNumber += 1
+      var procCallNode: Node = new Node(parent, "procCall", null, nodeNumber)
+      nodeListInFile += (procCallNode)
+      if (matchTokenType(Constants.IdentText)) {
+        addChildrenAndConsumeToken(procCallNode)
+      }
+      if (matchTokenTypeAndValue(Constants.OperatorText, "(")) {
+        addChildrenAndConsumeToken(procCallNode)
+      }
+      procCallNode.childrens += callParams(procCallNode)
+      if (matchTokenTypeAndValue(Constants.OperatorText, ")")) {
+        addChildrenAndConsumeToken(procCallNode)
+      }
+      return procCallNode
+    }
+
     /**
      * Create subtree for statement and return the head node
      */
@@ -267,7 +300,12 @@ class Parser {
       var statementNode: Node = new Node(parent, "statement", null, nodeNumber)
       nodeListInFile += (statementNode)
       if (matchTokenType(Constants.IdentText)) {
-        statementNode.childrens += assignment(statementNode)
+        if (remaining.tail.head.value.equals(":=")) {
+          statementNode.childrens += assignment(statementNode)
+        } else {
+          statementNode.childrens += procCall(statementNode)
+        }
+
       } else if (matchTokenValue("if")) {
         statementNode.childrens += ifStatement(statementNode)
       } else if (matchTokenValue("while")) {

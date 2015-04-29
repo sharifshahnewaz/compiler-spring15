@@ -46,7 +46,7 @@ class Scanner {
   def findTokenPattern(item: String, lineNumber: Int): Token = {
     item match {
 
-      case "(" | ")" | ":=" | ";" | ":" => {
+      case "(" | ")" | ":=" | ";" | ":" | "," => {
         return new Token(item, Constants.OperatorText, lineNumber);
       }
       case "*" | "div" | "mod" => {
