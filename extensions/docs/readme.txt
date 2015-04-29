@@ -8,9 +8,8 @@ New Grammar:
 <declarations> ::= VAR ident AS <type> SC <declarations>
                | ε
 <type> ::= INT | BOOL
-<procedures> ::= <procedure><procedures> 
+<procedures> ::= PROCEDURE ident LP <parameters> RP SC <declarations> BEGIN <statementSequence> END SC <procedures> 
 | ε
-<procedure> ::== PROCEDURE ident LP <parameters> RP SC <declarations> BEGIN <statementSequence> END
 <parameters> ::= <parameter> <moreparameter>
 	| ε
 <moreparameter> ::= SC <parameter><parameters>

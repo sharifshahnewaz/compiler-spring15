@@ -15,7 +15,7 @@ object CoreCompiler {
 
   def main(args: Array[String]) {
     //var arr = Array("tl-progs/simple2.tl", "tl-progs/simple1.tl", "tl-progs/sqrt.tl", "tl-progs/euclid.tl", "tl-progs/factorize.tl", "tl-progs/fibonacci.tl", "tl-progs/type-error1.tl")
-    var arr = Array("tl-progs/sqrt.tl")
+    var arr = Array("tl-progs/a.tl")
     if (args.length == 0) {
       //      Console.err.println("No arguments.")
       //      sys.exit(0)
@@ -77,10 +77,12 @@ object CoreCompiler {
         case e: SyntaxError => {
           print(s"Syntax Error [$fileNameStem.tl]: ")
           println(e.getMessage())
+          e.printStackTrace()
         }
         case e: ParseError => {
           print(s"Error while parsing [$fileNameStem.tl]: ")
           println(e.getMessage())
+          e.printStackTrace()
         }
         case e: ASTError => {
           print(s"Error while generating AST [$fileNameStem.tl]: ")

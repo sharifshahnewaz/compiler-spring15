@@ -104,7 +104,9 @@ class Parser {
       }
 
       programNode.childrens += declarations(programNode) // add the subtree got from declarations as second child
-
+      //if (remaining.head.value.equals("procedure")) {
+      programNode.childrens += procedures(programNode)
+      //}
       if (matchTokenTypeAndValue(Constants.KeywordText, "begin")) {
         addChildrenAndConsumeToken(programNode)
       }
@@ -118,6 +120,72 @@ class Parser {
       return programNode
     }
 
+    def parameters(parent: Node): Node = {
+      nodeNumber += 1
+      var parametersNode: Node = new Node(parent, "parameters", null, nodeNumber)
+      nodeListInFile += parametersNode
+      if (!remaining.head.value.equals(")")) {
+        if (matchTokenType(Constants.IdentText)) {
+          addChildrenAndConsumeToken(parametersNode)
+        }
+        if (matchTokenTypeAndValue(Constants.OperatorText, ":")) {
+          addChildrenAndConsumeToken(parametersNode)
+        }
+        parametersNode.childrens += typeNT(parametersNode)
+        
+        if (remaining.head.value.equals(";")) {
+          addChildrenAndConsumeToken(parametersNode)          
+        }
+        parametersNode.childrens += parameters(parametersNode)
+      } else parametersNode.childrens += epsilonNode(parametersNode)
+      return parametersNode
+    }
+
+    def procedures(parent: Node): Node = {
+      nodeNumber += 1
+      var proceduresNode: Node = new Node(parent, "procedures", null, nodeNumber)
+      nodeListInFile += proceduresNode
+
+      if (!remaining.head.value.equals("begin")) {
+        if (matchTokenTypeAndValue(Constants.KeywordText, "procedure")) {
+          addChildrenAndConsumeToken(proceduresNode)
+        }
+        if (matchTokenType(Constants.IdentText)) {
+          addChildrenAndConsumeToken(proceduresNode)
+        }
+        if (matchTokenTypeAndValue(Constants.OperatorText, "(")) {
+          addChildrenAndConsumeToken(proceduresNode)
+        }
+
+        proceduresNode.childrens += parameters(proceduresNode)
+
+        if (matchTokenTypeAndValue(Constants.OperatorText, ")")) {
+          addChildrenAndConsumeToken(proceduresNode)
+        }
+        if (matchTokenTypeAndValue(Constants.OperatorText, ";")) {
+          addChildrenAndConsumeToken(proceduresNode)
+        }
+
+        proceduresNode.childrens += declarations(proceduresNode)
+
+        if (matchTokenTypeAndValue(Constants.KeywordText, "begin")) {
+          addChildrenAndConsumeToken(proceduresNode)
+        }
+
+        proceduresNode.childrens += statementSequence(proceduresNode)
+
+        if (matchTokenTypeAndValue(Constants.KeywordText, "end")) {
+          addChildrenAndConsumeToken(proceduresNode)
+        }
+        if (matchTokenTypeAndValue(Constants.OperatorText, ";")) {
+          addChildrenAndConsumeToken(proceduresNode)
+        }
+        proceduresNode.childrens += procedures(proceduresNode)
+      } else proceduresNode.childrens += epsilonNode(proceduresNode)
+
+      return proceduresNode
+    }
+
     /**
      *      declarations()
      *      Recursively create subtree for declarations and return the head node
@@ -128,7 +196,7 @@ class Parser {
       nodeNumber += 1
       var declarationsNode: Node = new Node(parent, "declarations", null, nodeNumber)
       nodeListInFile += (declarationsNode)
-      if (!remaining.head.value.equals("begin")) {
+      if ((!remaining.head.value.equals("begin")) && (!remaining.head.value.equals("procedure"))) {
         if (matchTokenTypeAndValue(Constants.KeywordText, "var")) {
           addChildrenAndConsumeToken(declarationsNode)
         }
