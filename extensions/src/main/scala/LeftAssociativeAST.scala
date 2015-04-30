@@ -12,7 +12,8 @@ import scala.collection.mutable.Queue
 
 class LeftAssociativeAST {
 
-  var symbolTable = HashMap.empty[String, String]
+  var symbolTables = HashMap.empty[String, HashMap[String, String]]
+ // var mainProgSymbolTable = HashMap.empty[String, String]
   var nodeNumber: Int = 0
   // this will be used to determine whether we are in declaration segment or not.
   // i am using this to differentiate between the ASTNode label. e.g. decl:'N' vs N 
@@ -221,8 +222,19 @@ class LeftAssociativeAST {
 
         if (matchTokenType(Constants.OperatorText) && matchTokenValue(";")) {
           consumeToken()
-          if (!symbolTable.contains(varName)) {
-            symbolTable += (varName -> varType)
+
+          var processName: String = null
+          if (parent.parent.nodeLabel.startsWith("proc")) {
+            processName = parent.parent.nodeLabel.split(" ")(1)
+          } else
+            processName = parent.parent.nodeLabel
+          
+          if (!symbolTables.contains(processName)) {
+            var newSymbolTable = HashMap.empty[String, String]
+            symbolTables += (processName -> newSymbolTable)
+          }
+          if (!symbolTables(processName).contains(varName)) {
+            symbolTables(processName) += (varName -> varType)
           } else throw new ASTError("Multiple declaration of the varriable '" + varName + "' at line " + remaining.head.lineNumber)
         }
       }
@@ -342,7 +354,7 @@ class LeftAssociativeAST {
     }
 
     def procCall(parent: ASTNode): ASTNode = {
-      
+
       var procCallNode = addChildrenAndConsumeTokenExtMessage(parent, "procCall: ")
       consumeToken() // consume '('
       nodeNumber += 1
