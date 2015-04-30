@@ -264,7 +264,7 @@ class Parser {
       var callParamsNode: Node = new Node(parent, "callParams", null, nodeNumber)
       nodeListInFile += (callParamsNode)
       if (!remaining.head.value.equals(")")) {
-        if (matchTokenType(Constants.IdentText)) {
+        if (matchTokenType(Constants.IdentText)|matchTokenType(Constants.IntLitText)|matchTokenType(Constants.BoolLitText)) {
           addChildrenAndConsumeToken(callParamsNode)
         }
          if (remaining.head.value.equals(","))  {

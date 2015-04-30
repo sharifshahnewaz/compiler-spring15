@@ -2,12 +2,12 @@ program
 	var X as int ;
 	var Y as int ;
 	
-%procedure DUMMY ( A : int ; B : int )
-
 procedure DUMMY ( A : int ; B : int ) ;
+
+%procedure DUMMY ( ) ;
 	var C as int ;
 begin
-	DUMMY ( A , B ) ;
+	DUMMY ( 7 , B ) ;
 	writeInt A - B ;
 end ;
 

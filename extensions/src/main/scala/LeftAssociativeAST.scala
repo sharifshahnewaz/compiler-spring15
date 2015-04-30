@@ -48,7 +48,7 @@ class LeftAssociativeAST {
      */
     def addChildrenAndConsumeTokenExtMessage(currentNode: ASTNode, extraValueString: String): ASTNode = {
       nodeNumber += 1
-      var n: ASTNode = new ASTNode(currentNode, extraValueString + "'" + remaining.head.value + "'", remaining.head, nodeNumber, null, null)
+      var n: ASTNode = new ASTNode(currentNode, extraValueString + remaining.head.value, remaining.head, nodeNumber, null, null)
       currentNode.childrens += (n)
       remaining = remaining.tail
       return n
@@ -117,17 +117,75 @@ class LeftAssociativeAST {
 
       declarations(decListNode)
 
+      isInDeclarationSegment = false
+
+      nodeNumber += 1
+      var proceduresNode: ASTNode = new ASTNode(programNode, "proc list", null, nodeNumber, null, null)
+      programNode.childrens += proceduresNode;
+
+      procedures(proceduresNode)
+
       nodeNumber += 1
       var stmtListNode: ASTNode = new ASTNode(programNode, "stmt list", null, nodeNumber, null, null)
       programNode.childrens += stmtListNode;
 
       if (matchTokenTypeAndValue(Constants.KeywordText, "begin")) {
         consumeToken()
-        isInDeclarationSegment = false
+
       }
       statementSequence(stmtListNode)
 
       return programNode
+    }
+
+    def parameters(parent: ASTNode): ASTNode = {
+      while (!remaining.head.value.equals(")")) {
+        var child = addChildrenAndConsumeToken(parent)
+        consumeToken() //consume ':'
+        addChildrenAndConsumeToken(child)
+        if (matchTokenValue(";"))
+          consumeToken()
+      }
+      return parent
+    }
+
+    def procedures(parent: ASTNode): ASTNode = {
+      while (!remaining.head.value.equals("begin")) {
+
+        if (matchTokenTypeAndValue(Constants.KeywordText, "procedure")) {
+          consumeToken()
+        }
+        var procedureNode: ASTNode = null;
+
+        if (matchTokenType(Constants.IdentText)) {
+          procedureNode = addChildrenAndConsumeTokenExtMessage(parent, "procDecl: ")
+
+        }
+        consumeToken() //consume '('
+        nodeNumber += 1
+        var parametersNode: ASTNode = new ASTNode(procedureNode, "parameters", remaining.head, nodeNumber, null, null)
+        procedureNode.childrens += parametersNode
+
+        parameters(parametersNode)
+
+        consumeToken() // consume ')'
+        consumeToken() // consume ';'
+        nodeNumber += 1
+        var decListNode: ASTNode = new ASTNode(procedureNode, "decl list", null, nodeNumber, null, null)
+        procedureNode.childrens += decListNode;
+
+        declarations(decListNode)
+
+        consumeToken() // consume 'begin'
+        nodeNumber += 1
+        var stmtListNode: ASTNode = new ASTNode(procedureNode, "stmt list", null, nodeNumber, null, null)
+        procedureNode.childrens += stmtListNode
+        statementSequence(stmtListNode);
+        consumeToken() //consume 'end'
+        consumeToken() // consume ';'
+
+      }
+      return parent
     }
 
     /**
@@ -136,11 +194,11 @@ class LeftAssociativeAST {
      *      <declarations> ::= VAR ident AS <type> SC <declarations> | ε
      */
     def declarations(parent: ASTNode): ASTNode = {
-
+      isInDeclarationSegment = true
       var varName: String = null
       var varType: String = null
 
-      while (!remaining.head.value.equals("begin")) {
+      while ((!remaining.head.value.equals("begin")) && (!remaining.head.value.equals("procedure"))) {
 
         if (matchTokenTypeAndValue(Constants.KeywordText, "var")) {
           consumeToken()
@@ -168,7 +226,7 @@ class LeftAssociativeAST {
           } else throw new ASTError("Multiple declaration of the varriable '" + varName + "' at line " + remaining.head.lineNumber)
         }
       }
-
+      isInDeclarationSegment = false
       return parent
     }
 
@@ -191,7 +249,12 @@ class LeftAssociativeAST {
      */
     def statement(parent: ASTNode): ASTNode = {
       if (matchTokenType(Constants.IdentText)) {
-        assignment(parent)
+        if (remaining.tail.head.value.equals(":=")) {
+          assignment(parent)
+        } else {
+          procCall(parent)
+        }
+
       } else if (matchTokenValue("if")) {
         ifStatement(parent)
       } else if (matchTokenValue("while")) {
@@ -278,6 +341,23 @@ class LeftAssociativeAST {
       return whileNode;
     }
 
+    def procCall(parent: ASTNode): ASTNode = {
+      
+      var procCallNode = addChildrenAndConsumeTokenExtMessage(parent, "procCall: ")
+      consumeToken() // consume '('
+      nodeNumber += 1
+      var parameters: ASTNode = new ASTNode(procCallNode, "parameters", remaining.head, nodeNumber, null, null)
+      procCallNode.childrens += parameters
+      while (!matchTokenValue(")")) {
+        addChildrenAndConsumeToken(parameters)
+        if (matchTokenValue(",")) {
+          consumeToken()
+        }
+      }
+      consumeToken() // consume ')'
+      return procCallNode
+    }
+
     def assignment(parent: ASTNode): ASTNode = {
       nodeNumber += 1
       var assignmentNode: ASTNode = new ASTNode(parent, ":=", remaining.head, nodeNumber, null, null)
@@ -305,12 +385,12 @@ class LeftAssociativeAST {
       parent.childrens += expressionNode
 
       var simResult: ASTNode = simpleExpression(expressionNode)
-      
+
       parent.childrens.remove(parent.childrens.length - 1)
       parent.childrens += simResult
-      
+
       simResult.parent = parent
-      
+
       expressionPrime(parent)
       return parent
     }
@@ -324,7 +404,7 @@ class LeftAssociativeAST {
       nodeNumber += 1
       var termNode: ASTNode = new ASTNode(simpleExpressionNode, "term", remaining.head, nodeNumber, null, null)
       simpleExpressionNode.childrens += termNode
-      
+
       nodeNumber += 1
       var simpleExpressionPrimeNode: ASTNode = new ASTNode(simpleExpressionNode, "simpleExpressionPrime", remaining.head, nodeNumber, null, null)
       simpleExpressionNode.childrens += simpleExpressionPrimeNode
@@ -332,7 +412,7 @@ class LeftAssociativeAST {
 
       term(simpleExpressionNode, termNode)
       simpleExpressionPrimeNode.st = termNode.ptr
-      
+
       simpleExpressionPrime(simpleExpressionNode, simpleExpressionPrimeNode)
       simpleExpressionNode.ptr = simpleExpressionPrimeNode.ptr
 
@@ -361,11 +441,11 @@ class LeftAssociativeAST {
         nodeNumber += 1
         var binaryOpNode: ASTNode = new ASTNode(null, remaining.head.value, remaining.head, nodeNumber, null, null)
         consumeToken()
-        
+
         nodeNumber += 1
         var termNode: ASTNode = new ASTNode(simpleExpressionPrimeNode_1, "term", remaining.head, nodeNumber, null, null)
         simpleExpressionPrimeNode_1.childrens += termNode
-        
+
         nodeNumber += 1
         var simpleExpressionPrimeNode_2: ASTNode = new ASTNode(simpleExpressionPrimeNode_1, "simpleExpressionPrime", remaining.head, nodeNumber, null, null)
         simpleExpressionPrimeNode_1.childrens += simpleExpressionPrimeNode_2
@@ -373,11 +453,11 @@ class LeftAssociativeAST {
         term(simpleExpressionPrimeNode_1, termNode)
         simpleExpressionPrimeNode_1.st.parent = binaryOpNode
         termNode.ptr.parent = binaryOpNode
-        
+
         binaryOpNode.childrens += simpleExpressionPrimeNode_1.st
         binaryOpNode.childrens += termNode.ptr
         simpleExpressionPrimeNode_2.st = binaryOpNode
-        
+
         simpleExpressionPrime(simpleExpressionPrimeNode_1, simpleExpressionPrimeNode_2)
         simpleExpressionPrimeNode_1.ptr = simpleExpressionPrimeNode_2.ptr
         parent
@@ -391,31 +471,30 @@ class LeftAssociativeAST {
       nodeNumber += 1
       var factorNode: ASTNode = new ASTNode(parent, "factor", remaining.head, nodeNumber, null, null)
       termNode.childrens += factorNode
-      
+
       nodeNumber += 1
       var termPrimeNode: ASTNode = new ASTNode(parent, "termPrime", remaining.head, nodeNumber, null, null)
       termNode.childrens += termPrimeNode
-      
+
       factor(termNode, factorNode)
       termPrimeNode.st = factorNode.ptr
-      
+
       termPrime(termNode, termPrimeNode)
       termNode.ptr = termPrimeNode.ptr
-      
+
       return parent
     }
-
 
     def termPrime(parent: ASTNode, termPrimeNode: ASTNode): ASTNode = {
       if (matchTokenType(Constants.MultiplicativeText)) {
         nodeNumber += 1
         var binaryOpNode: ASTNode = new ASTNode(null, remaining.head.value, remaining.head, nodeNumber, null, null)
         consumeToken()
-        
+
         nodeNumber += 1
         var factorNode: ASTNode = new ASTNode(termPrimeNode, "factor", remaining.head, nodeNumber, null, null)
         termPrimeNode.childrens += factorNode
-        
+
         nodeNumber += 1
         var simpleExpressionPrimeNode_2: ASTNode = new ASTNode(termPrimeNode, "termPrime", remaining.head, nodeNumber, null, null)
         termPrimeNode.childrens += simpleExpressionPrimeNode_2
@@ -423,11 +502,11 @@ class LeftAssociativeAST {
         factor(termPrimeNode, factorNode)
         termPrimeNode.st.parent = binaryOpNode
         factorNode.ptr.parent = binaryOpNode
-        
+
         binaryOpNode.childrens += termPrimeNode.st
         binaryOpNode.childrens += factorNode.ptr
         simpleExpressionPrimeNode_2.st = binaryOpNode
-        
+
         termPrime(termPrimeNode, simpleExpressionPrimeNode_2)
         termPrimeNode.ptr = simpleExpressionPrimeNode_2.ptr
         parent
