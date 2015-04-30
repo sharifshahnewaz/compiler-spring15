@@ -17,7 +17,8 @@ class ILOC {
   var exitBlock: BasicBlock = null
   var fullILOCCOdes = ""
   var currentScope = HashMap.empty[String, EnvVar]
-  var procBlocks = HashMap.empty[String, BasicBlock]
+  var procEntryBlocks = HashMap.empty[String, BasicBlock]
+  var procExitBlocks = HashMap.empty[String, BasicBlock]
 
   def generateILOC(root: ASTNode, symbolTable: HashMap[String, HashMap[String, String]]) = {
 
@@ -35,7 +36,7 @@ class ILOC {
       var scope = HashMap.empty[String, EnvVar]
       symbolTable(procedure).keys.foreach { varriable =>
         var temp = symbolTable(procedure)
-        scope += (varriable -> new EnvVar(varriable, temp(varriable), "r_" + varriable+"_"+environment.size))
+        scope += (varriable -> new EnvVar(varriable, temp(varriable), "r_" + varriable + "_" + environment.size))
       }
       environment += (procedure -> scope)
     }
@@ -83,13 +84,14 @@ class ILOC {
     def procList(procListNode: ASTNode, entryBlock: BasicBlock): BasicBlock = {
       for (procedure <- procListNode.childrens) {
         var procEntryBlock = new BasicBlock(getNewBlockName(), "")
-        exitBlock = procEntryBlock
+        var exitblock = procEntryBlock
         blocksInFile += procEntryBlock
         var procName = procedure.nodeLabel.split(" ")(1)
-        procBlocks += procName -> procEntryBlock
+        procEntryBlocks += procName -> procEntryBlock
         currentScope = environment(procName)
-        declarations(procedure.childrens.tail.head,procEntryBlock)
-         stmtList(procedure.childrens.tail.tail.head, procEntryBlock)
+        declarations(procedure.childrens.tail.head, procEntryBlock)
+        exitBlock = stmtList(procedure.childrens.tail.tail.head, procEntryBlock)
+        procExitBlocks += procName -> exitBlock
       }
 
       return exitBlock
@@ -112,7 +114,18 @@ class ILOC {
         return whileStatement(stmtNode, entryBlock)
       } else if (stmtNode.nodeLabel.equals("writeInt")) {
         return writeInt(stmtNode, entryBlock)
+      } else if (stmtNode.nodeLabel.startsWith("procCall")) {
+        return procCall(stmtNode, entryBlock)
       }
+      return null
+    }
+    def procCall(node: ASTNode, entryBlock: BasicBlock): BasicBlock = {
+      
+      var procName = node.nodeLabel.split(" ")(1)
+      var procEntryBlock = procEntryBlocks(procName)
+      var procExitBlock = procExitBlocks(procName)
+      cfgEdges += entryBlock.blockName + " -> " + procEntryBlock.blockName
+      cfgEdges += procExitBlock.blockName + " -> " + entryBlock.blockName
       return null
     }
 
@@ -240,6 +253,7 @@ class ILOC {
         return currentScope(node.token.value).assignedReg
       } else {
         var resultReg = getFreshReg()
+        //println("block=",block)
         block.ILOCCodeSeq += "loadI " + node.token.value + " => " + resultReg + "\n"
         return resultReg
       }

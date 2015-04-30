@@ -45,6 +45,8 @@ begin
     SQRT := SQRT + 1 ; 
   end ; 
 
+ %FACTORIZE ( ) ;
+
   SQRT := SQRT - 1 ; 
 
   writeInt SQRT ; 
