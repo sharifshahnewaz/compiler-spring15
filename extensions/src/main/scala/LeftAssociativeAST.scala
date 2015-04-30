@@ -13,7 +13,7 @@ import scala.collection.mutable.Queue
 class LeftAssociativeAST {
 
   var symbolTables = HashMap.empty[String, HashMap[String, String]]
- // var mainProgSymbolTable = HashMap.empty[String, String]
+  var procedureTable = HashMap.empty[String, HashMap[String, String]]
   var nodeNumber: Int = 0
   // this will be used to determine whether we are in declaration segment or not.
   // i am using this to differentiate between the ASTNode label. e.g. decl:'N' vs N 
@@ -143,10 +143,19 @@ class LeftAssociativeAST {
       while (!remaining.head.value.equals(")")) {
         var child = addChildrenAndConsumeToken(parent)
         consumeToken() //consume ':'
-        addChildrenAndConsumeToken(child)
-        if (matchTokenValue(";"))
-          consumeToken()
+        var varType = addChildrenAndConsumeToken(child)
+        if (matchTokenValue(";")) consumeToken()
+
+        var procedureName = parent.parent.nodeLabel.split(" ")(1)
+        if (!symbolTables.contains(procedureName)) {
+          var newSymbolTable = HashMap.empty[String, String]
+          symbolTables += (procedureName -> newSymbolTable)
+        }
+        if (!symbolTables(procedureName).contains(procedureName)) {
+          symbolTables(procedureName) += (child.nodeLabel -> varType.nodeLabel)
+        } else throw new ASTError("Multiple declaration of the varriable '" + child.nodeLabel + "' at line " + remaining.head.lineNumber)
       }
+
       return parent
     }
 
@@ -223,18 +232,18 @@ class LeftAssociativeAST {
         if (matchTokenType(Constants.OperatorText) && matchTokenValue(";")) {
           consumeToken()
 
-          var processName: String = null
+          var procedureName: String = null
           if (parent.parent.nodeLabel.startsWith("proc")) {
-            processName = parent.parent.nodeLabel.split(" ")(1)
+            procedureName = parent.parent.nodeLabel.split(" ")(1)
           } else
-            processName = parent.parent.nodeLabel
-          
-          if (!symbolTables.contains(processName)) {
+            procedureName = parent.parent.nodeLabel
+
+          if (!symbolTables.contains(procedureName)) {
             var newSymbolTable = HashMap.empty[String, String]
-            symbolTables += (processName -> newSymbolTable)
+            symbolTables += (procedureName -> newSymbolTable)
           }
-          if (!symbolTables(processName).contains(varName)) {
-            symbolTables(processName) += (varName -> varType)
+          if (!symbolTables(procedureName).contains(varName)) {
+            symbolTables(procedureName) += (varName -> varType)
           } else throw new ASTError("Multiple declaration of the varriable '" + varName + "' at line " + remaining.head.lineNumber)
         }
       }

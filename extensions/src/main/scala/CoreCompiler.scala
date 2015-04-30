@@ -14,8 +14,8 @@ case class TypeError(msg: String) extends Exception(msg)
 object CoreCompiler {
 
   def main(args: Array[String]) {
-    //var arr = Array("tl-progs/procedures.tl", "tl-progs/simple2.tl", "tl-progs/simple1.tl", "tl-progs/sqrt.tl", "tl-progs/euclid.tl", "tl-progs/factorize.tl", "tl-progs/fibonacci.tl", "tl-progs/type-error1.tl")
-    var arr = Array("tl-progs/procedures.tl")
+    var arr = Array("tl-progs/procedures.tl", "tl-progs/simple2.tl", "tl-progs/simple1.tl", "tl-progs/sqrt.tl", "tl-progs/euclid.tl", "tl-progs/factorize.tl", "tl-progs/fibonacci.tl", "tl-progs/type-error1.tl")
+    //var arr = Array("tl-progs/procedures.tl")
     if (args.length == 0) {
       //      Console.err.println("No arguments.")
       //      sys.exit(0)
@@ -63,11 +63,11 @@ object CoreCompiler {
            // println(" Value = " + ast.symbolTables(f)(i))
          // }
        // }
-        /*var typeChecker: TypeChecker = new TypeChecker
-        if (typeChecker.checkProgram(astRoot, symbolTable))
+        var typeChecker: TypeChecker = new TypeChecker
+        if (typeChecker.checkProgram(astRoot, ast.symbolTables))
           println("Done")
 
-        var iloc = new ILOC
+        /*var iloc = new ILOC
         iloc.generateILOC(astRoot, symbolTable)
         iloc.buildGraphViz(ilocCFGName)
         /*var st: StringTokenizer = new StringTokenizer(iloc.fullILOCCOdes,"\n")

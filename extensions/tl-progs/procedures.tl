@@ -5,7 +5,8 @@ program
 procedure DUMMY ( A : int ; B : int ) ;
 
 %procedure DUMMY ( ) ;
-	var A as int ;
+
+	var X as int ;
 begin
 	DUMMY ( 7 , B ) ;
 	writeInt A - B ;

@@ -16,11 +16,20 @@ class TypeChecker {
     }
   }
 
-  def checkProgram(rootNode: ASTNode, symbolTable: HashMap[String, String]): Boolean = {
+  def checkProgram(rootNode: ASTNode, symbolTables: HashMap[String, HashMap[String, String]]): Boolean = {
 
-    this.symbolTable = symbolTable
+    var procedureList = rootNode.childrens.toList.tail.head.childrens
 
-    if (statementList(rootNode.childrens.toList.tail.head))
+    for (procedure <- procedureList) {
+      var procedureName = procedure.nodeLabel.split(" ")(1)
+      symbolTable = symbolTables(procedureName)
+      if (!statementList(procedure.childrens.tail.tail.head)) {
+        throw new TypeError("Program has a type error")
+      }
+
+    }
+    symbolTable = symbolTables("program")
+    if (statementList(rootNode.childrens.toList.tail.tail.head))
       return true;
     else
       throw new TypeError("Program has a type error")
@@ -51,9 +60,13 @@ class TypeChecker {
       return whileStatement(stmtNode)
     } else if (stmtNode.nodeLabel.equals("writeInt")) {
       return writeInt(stmtNode)
+    } else if (stmtNode.nodeLabel.startsWith("procCall")) {
+      return procCall(stmtNode)
     } else throw new TypeError("Statement has a type mismatch")
   }
-
+  def procCall(node: ASTNode): Boolean = {
+    return true
+  }
   def assignment(node: ASTNode): Boolean = {
 
     var leftChild = node.childrens.toList.head;
@@ -71,8 +84,8 @@ class TypeChecker {
     if (node.childrens.length > 0) {
       if (getExpressionType(node.childrens.toList.head).equals("bool")) {
         retVal = retVal && true
-      }else
-      throw new TypeError("Expression does not return 'bool' for 'if' statement at line: "+node.childrens.toList.head.token.lineNumber)
+      } else
+        throw new TypeError("Expression does not return 'bool' for 'if' statement at line: " + node.childrens.toList.head.token.lineNumber)
     }
     if (node.childrens.length > 1) {
       retVal = retVal && statementList(node.childrens.toList.tail.head)
@@ -89,8 +102,8 @@ class TypeChecker {
     if (node.childrens.length > 0) {
       if (getExpressionType(node.childrens.toList.head).equals("bool")) {
         retVal = retVal && true
-      }else
-      throw new TypeError("Expression does not return 'bool' for 'while' statement at line: "+node.childrens.toList.head.token.lineNumber)
+      } else
+        throw new TypeError("Expression does not return 'bool' for 'while' statement at line: " + node.childrens.toList.head.token.lineNumber)
     }
     if (node.childrens.length > 1) {
       retVal = retVal && statementList(node.childrens.toList.tail.head)
