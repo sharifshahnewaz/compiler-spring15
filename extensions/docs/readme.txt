@@ -17,17 +17,22 @@ New Grammar:
 <parameter> ::= ident COL <type>
 <statementSequence> ::= <statement> SC <statementSequence>
                       | ε
-<statement> ::= <assignment>
+<statement> ::= <assignmentORproc>
             | <ifStatement>
             | <whileStatement>
-            | <writeInt>
-<assignment> ::= ident ASGN <assignment'>
+            | <writeInt>	
+<assignmentORproc> ::= ident <assignmentORproc’>
+<assignmentORproc’> ::= ASGN <assignment'> | LP <callparams> RP
 <assignment'> ::= <expression> | READINT
 <ifStatement> ::= IF <expression> THEN <statementSequence> <elseClause> END
 <elseClause> ::= ELSE <statementSequence>
              | ε
 <whileStatement> ::= WHILE <expression> DO <statementSequence> END
 <writeInt> ::= WRITEINT <expression>
+<callparams> ::= ident <morecallparams>
+| ε
+< morecallparams > ::= COMMA ident < morecallparams >
+| ε
 <expression> ::= <simpleExpression><expression'>
 <expression'>::= COMPARE <expression> | ε
 <simpleExpression> ::= <term> <simpleExpression'>
