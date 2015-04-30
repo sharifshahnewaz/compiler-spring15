@@ -1,20 +1,52 @@
 program
-	var X as int ;
-	var Y as int ;
+	var N as int ; 
+ 	var SQRT as int ; 
 	
-procedure DUMMY ( A : int ; B : int ) ;
+procedure FACTORIZE (  ) ;
 
-%procedure DUMMY ( ) ;
+	var N as int ; 
+   var I as int ; 
+begin 
+   N := readInt ; 
 
-	var X as int ;
-begin
-	DUMMY ( 7 , B ) ;
-	writeInt A - B ;
+   I := 2 ; 
+   while I <= N do 
+      while N mod I = 0 do 
+         N := N div I ; 
+         writeInt I ; 
+      end ; 
+      I := I + 1 ; 
+   end ; 
 end ;
 
-begin
-    X := readInt ;
-	Y := 5 - X ;
-	DUMMY ( X , Y ) ;
-	writeInt X - Y ;
-end
+procedure FIBONACCI ( ) ;
+
+   var N as int ; 
+   var I as int ; 
+begin 
+   N := readInt ; 
+
+   I := 2 ; 
+   while I <= N do 
+      while N mod I = 0 do 
+         N := N div I ; 
+         writeInt I ; 
+      end ; 
+      I := I + 1 ; 
+   end ; 
+end ;
+
+
+begin 
+  N := readInt ; 
+  SQRT := 0 ; 
+
+  while SQRT * SQRT <= N do 
+    SQRT := SQRT + 1 ; 
+  end ; 
+
+  SQRT := SQRT - 1 ; 
+
+  writeInt SQRT ; 
+
+end 

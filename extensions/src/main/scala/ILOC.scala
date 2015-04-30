@@ -12,12 +12,14 @@ class ILOC {
 
   var blocksInFile = new ListBuffer[BasicBlock]
   var cfgEdges = new ListBuffer[String]
-  var environment = HashMap.empty[String, EnvVar]
+  var environment = HashMap.empty[String, HashMap[String, EnvVar]]
   var operatorToILOC = HashMap.empty[String, String]
   var exitBlock: BasicBlock = null
   var fullILOCCOdes = ""
+  var currentScope = HashMap.empty[String, EnvVar]
+  var procBlocks = HashMap.empty[String, BasicBlock]
 
-  def generateILOC(root: ASTNode, symbolTable: HashMap[String, String]) = {
+  def generateILOC(root: ASTNode, symbolTable: HashMap[String, HashMap[String, String]]) = {
 
     def getFreshReg(): String = {
       regCounter += 1
@@ -29,8 +31,13 @@ class ILOC {
       return "B" + blockCounter
     }
 
-    symbolTable.keys.foreach { varriable =>
-      environment += (varriable -> new EnvVar(varriable, symbolTable(varriable), "r_" + varriable))
+    symbolTable.keys.foreach { procedure =>
+      var scope = HashMap.empty[String, EnvVar]
+      symbolTable(procedure).keys.foreach { varriable =>
+        var temp = symbolTable(procedure)
+        scope += (varriable -> new EnvVar(varriable, temp(varriable), "r_" + varriable+"_"+environment.size))
+      }
+      environment += (procedure -> scope)
     }
 
     operatorToILOC += ("*" -> "mult")
@@ -46,30 +53,46 @@ class ILOC {
     operatorToILOC += (">=" -> "cmp_GE")
 
     def program() {
-      declarations(root.childrens.toList.head)
-    }
-
-    def declarations(node: ASTNode) {
-
+      currentScope = environment("program")
       var programEntryBlock = new BasicBlock(getNewBlockName(), "")
-      exitBlock = programEntryBlock;
+      exitBlock = programEntryBlock
 
       blocksInFile += programEntryBlock
 
       cfgEdges += "entry -> " + programEntryBlock.blockName
+      declarations(root.childrens.toList.head, programEntryBlock)
+      procList(root.childrens.toList.tail.head, programEntryBlock)
 
-      environment.keys.foreach { envVar =>
-        if (environment(envVar).varType.equals("int")) {
-          programEntryBlock.ILOCCodeSeq += "loadI 0 => " + environment(envVar).assignedReg + "\n"
+      currentScope = environment("program")
+      stmtList(root.childrens.toList.tail.tail.head, programEntryBlock)
+      exitBlock.ILOCCodeSeq += "exit\n"
+      cfgEdges += exitBlock.blockName + "-> exit"
+    }
+
+    def declarations(node: ASTNode, entryBlock: BasicBlock) {
+
+      currentScope.keys.foreach { envVar =>
+        if (currentScope(envVar).varType.equals("int")) {
+          entryBlock.ILOCCodeSeq += "loadI 0 => " + currentScope(envVar).assignedReg + "\n"
         } else {
-          programEntryBlock.ILOCCodeSeq += "loadI false => " + environment(envVar).assignedReg + "\n"
+          entryBlock.ILOCCodeSeq += "loadI false => " + currentScope(envVar).assignedReg + "\n"
         }
       }
 
-      //currentBlock = programEntryBlock;
-      stmtList(root.childrens.toList.tail.head, programEntryBlock)
-      exitBlock.ILOCCodeSeq += "exit\n"
-      cfgEdges += exitBlock.blockName + "->exit"
+    }
+    def procList(procListNode: ASTNode, entryBlock: BasicBlock): BasicBlock = {
+      for (procedure <- procListNode.childrens) {
+        var procEntryBlock = new BasicBlock(getNewBlockName(), "")
+        exitBlock = procEntryBlock
+        blocksInFile += procEntryBlock
+        var procName = procedure.nodeLabel.split(" ")(1)
+        procBlocks += procName -> procEntryBlock
+        currentScope = environment(procName)
+        declarations(procedure.childrens.tail.head,procEntryBlock)
+         stmtList(procedure.childrens.tail.tail.head, procEntryBlock)
+      }
+
+      return exitBlock
     }
 
     def stmtList(stmtListNode: ASTNode, entryBlock: BasicBlock): BasicBlock = {
@@ -95,11 +118,11 @@ class ILOC {
 
     def assignment(node: ASTNode, entryBlock: BasicBlock): BasicBlock = {
       if (node.childrens.toList.tail.head.token.value.equals("readInt")) {
-        entryBlock.ILOCCodeSeq += "readInt => " + environment(node.childrens.toList.head.token.value).assignedReg + "\n"
+        entryBlock.ILOCCodeSeq += "readInt => " + currentScope(node.childrens.toList.head.token.value).assignedReg + "\n"
       } else {
         var x = expression(node.childrens.toList.tail.head, entryBlock)
         entryBlock.ILOCCodeSeq += "i2i " + x +
-          " => " + environment(node.childrens.toList.head.token.value).assignedReg + "\n"
+          " => " + currentScope(node.childrens.toList.head.token.value).assignedReg + "\n"
       }
       return entryBlock
 
@@ -214,7 +237,7 @@ class ILOC {
 
     def factor(node: ASTNode, block: BasicBlock): String = {
       if (node.token.tokenType == Constants.IdentText) {
-        return environment(node.token.value).assignedReg
+        return currentScope(node.token.value).assignedReg
       } else {
         var resultReg = getFreshReg()
         block.ILOCCodeSeq += "loadI " + node.token.value + " => " + resultReg + "\n"

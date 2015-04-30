@@ -15,7 +15,7 @@ object CoreCompiler {
 
   def main(args: Array[String]) {
     var arr = Array("tl-progs/procedures.tl", "tl-progs/simple2.tl", "tl-progs/simple1.tl", "tl-progs/sqrt.tl", "tl-progs/euclid.tl", "tl-progs/factorize.tl", "tl-progs/fibonacci.tl", "tl-progs/type-error1.tl")
-    //var arr = Array("tl-progs/procedures.tl")
+   //var arr = Array("tl-progs/procedures.tl")
     if (args.length == 0) {
       //      Console.err.println("No arguments.")
       //      sys.exit(0)
@@ -67,15 +67,15 @@ object CoreCompiler {
         if (typeChecker.checkProgram(astRoot, ast.symbolTables))
           println("Done")
 
-        /*var iloc = new ILOC
-        iloc.generateILOC(astRoot, symbolTable)
+        var iloc = new ILOC
+        iloc.generateILOC(astRoot, ast.symbolTables)
         iloc.buildGraphViz(ilocCFGName)
         /*var st: StringTokenizer = new StringTokenizer(iloc.fullILOCCOdes,"\n")
         while (st.hasMoreTokens()) {
           println(st.nextToken())
         }*/
-        var mips= new MIPS
-        mips.generateMIPS(iloc.fullILOCCOdes, mipsAsmName)*/
+       var mips= new MIPS
+        mips.generateMIPS(iloc.fullILOCCOdes, mipsAsmName)
 
       } catch {
         case e: SyntaxError => {
