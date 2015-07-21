@@ -30,13 +30,12 @@ Directory Layout
   │       └── main
   │           └── scala
   └── core
+   |   ├── docs
+   |   └── src
+   |       └── main
+   |           └── scala
+   |── extensions
       ├── docs
       └── src
           └── main
               └── scala
-
-Please do not check any Eclipse/scalac generated files (git should ignore all 
-files under bin/ and target/).
-
-Additional details for naming the extension project directories will
-be provided at a later date.
