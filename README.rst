@@ -13,6 +13,7 @@ Template main methods for ``warmup`` and ``core`` will be provided
 in the template repositories provided with the assignment instructions
 of each of those project submissions.
 
+Project requirement link: http://cs.utsa.edu/~vonronne/5363.s15/proj/core
 
 Directory Layout
 ================
